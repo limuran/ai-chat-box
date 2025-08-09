@@ -32,11 +32,18 @@ const typeDefs = /* GraphQL */ `
     error: String
   }
 
+  type ApiKeyValidation {
+    valid: Boolean!
+    error: String
+  }
+
   type Query {
     # 获取服务状态
     health: String!
     # 获取可用模型列表
     availableModels: [String!]!
+    # 验证API密钥状态
+    validateApiKey: ApiKeyValidation!
   }
 
   type Mutation {
