@@ -4,7 +4,7 @@ import { gql } from '@apollo/client';
 
 // GraphQL endpoint
 const httpLink = createHttpLink({
-  uri: (import.meta as any).env?.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8787/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8787/graphql',
   credentials: 'omit', // Cloudflare Workers 不需要 credentials
 });
 
