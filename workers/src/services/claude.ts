@@ -28,7 +28,7 @@ export class ClaudeService {
       });
 
       const response = await this.client.messages.create({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-5-sonnet-20241022', // 使用最新的正确模型名称
         max_tokens: 1000,
         temperature: 0.7,
         messages: claudeMessages,
@@ -65,6 +65,8 @@ export class ClaudeService {
         switch (error.status) {
           case 401:
             throw new Error('API 密钥无效或已过期');
+          case 404:
+            throw new Error('请求的模型不存在或不可用');
           case 429:
             throw new Error('请求太频繁，请稍后再试');
           case 400:
@@ -89,6 +91,9 @@ export class ClaudeService {
         if (error.message.includes('network')) {
           throw new Error('网络连接问题，请稍后再试');
         }
+        if (error.message.includes('not_found_error')) {
+          throw new Error('请求的 Claude 模型不存在，请联系管理员更新配置');
+        }
       }
       
       throw new Error(`AI 服务错误: ${error.message}`);
@@ -99,7 +104,7 @@ export class ClaudeService {
     try {
       console.log('Validating API key...');
       await this.client.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-5-sonnet-20241022', // 使用正确的模型名称
         max_tokens: 10,
         messages: [{ role: 'user', content: 'test' }],
       });
