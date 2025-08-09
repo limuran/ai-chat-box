@@ -4,12 +4,12 @@ import { gql } from '@apollo/client';
 
 // GraphQL endpoint
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8787/graphql',
+  uri: (import.meta as any).env?.VITE_GRAPHQL_ENDPOINT || 'http://localhost:8787/graphql',
   credentials: 'omit', // Cloudflare Workers 不需要 credentials
 });
 
 // 错误处理链接
-const errorLink = onError(({ graphQLErrors, networkError, operation, forward }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
       console.error(
