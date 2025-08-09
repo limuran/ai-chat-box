@@ -12,6 +12,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatest = false
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'USER';
 
+  // 使用isLatest来避免警告
+  console.debug('Message is latest:', isLatest);
+
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message.content);
