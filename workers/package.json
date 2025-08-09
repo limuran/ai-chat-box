@@ -1,0 +1,21 @@
+{
+  "name": "ai-chat-workers",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers GraphQL API for AI Chat Box",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "graphql": "^16.8.1",
+    "graphql-yoga": "^5.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231025.0",
+    "typescript": "^5.0.2",
+    "wrangler": "^3.0.0"
+  }
+}

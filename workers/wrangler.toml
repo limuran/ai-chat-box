@@ -1,0 +1,16 @@
+name = "ai-chat-workers"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "ai-chat-workers"
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+name = "ai-chat-workers-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# 环境变量需要通过 wrangler secret 命令设置
+# wrangler secret put CLAUDE_API_KEY
+# wrangler secret put CORS_ORIGINS
