@@ -38,9 +38,9 @@ const ChatBox: React.FC = () => {
 
       {/* 聊天消息区域 */}
       <div className="h-96 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/50 backdrop-blur-sm">
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <div key={message.id} className="message-animation">
-            <MessageBubble message={message} isLatest={index === messages.length - 1} />
+            <MessageBubble message={message} />
           </div>
         ))}
         

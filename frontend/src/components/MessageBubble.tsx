@@ -1,19 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Message } from '../types/chat';
 import { User, Bot, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
 
 interface MessageBubbleProps {
   message: Message;
-  isLatest?: boolean;
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLatest = false }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'USER';
-
-  // 使用isLatest来避免警告
-  console.debug('Message is latest:', isLatest);
 
   const handleCopy = async () => {
     try {
