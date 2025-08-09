@@ -9,13 +9,13 @@ export const resolvers = {
     
     availableModels: () => {
       return [
-        'claude-3-sonnet-20240229',
-        'claude-3-haiku-20240307',
-        'claude-3-opus-20240229'
+        'claude-3-5-sonnet-20241022', // 最新的 Claude 3.5 Sonnet
+        'claude-3-5-haiku-20241022',  // Claude 3.5 Haiku
+        'claude-3-opus-20240229'      // Claude 3 Opus (如果仍然可用)
       ];
     },
 
-    // 新增：验证API连接状态
+    // 验证API连接状态
     validateApiKey: async (
       _: any,
       __: any,
