@@ -14,6 +14,36 @@ export const resolvers = {
         'claude-3-opus-20240229'
       ];
     },
+
+    // 新增：验证API连接状态
+    validateApiKey: async (
+      _: any,
+      __: any,
+      context: GraphQLContext
+    ) => {
+      try {
+        if (!context.env.CLAUDE_API_KEY) {
+          return {
+            valid: false,
+            error: 'Claude API Key 未配置'
+          };
+        }
+
+        const claudeService = new ClaudeService(context.env.CLAUDE_API_KEY);
+        const isValid = await claudeService.validateApiKey();
+        
+        return {
+          valid: isValid,
+          error: isValid ? null : 'API 密钥无效或网络连接问题'
+        };
+      } catch (error) {
+        console.error('API key validation error:', error);
+        return {
+          valid: false,
+          error: error instanceof Error ? error.message : '验证失败'
+        };
+      }
+    },
   },
 
   Mutation: {
@@ -39,15 +69,18 @@ export const resolvers = {
           };
         }
 
+        console.log('Creating Claude service with API key length:', context.env.CLAUDE_API_KEY.length);
         const claudeService = new ClaudeService(context.env.CLAUDE_API_KEY);
         
-        // 准备对话历史
+        // 准备对话历史 - 修复role类型问题
         const messages = [...conversationHistory, {
           id: Date.now().toString(),
           content,
-          role: 'user' as const,
+          role: 'USER' as const,
           timestamp: new Date().toISOString(),
         }];
+
+        console.log('Sending message to Claude, total messages:', messages.length);
 
         // 调用 Claude API
         const response = await claudeService.sendMessage(messages);
@@ -55,7 +88,7 @@ export const resolvers = {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: response,
-          role: 'assistant',
+          role: 'ASSISTANT',
           timestamp: new Date().toISOString(),
         };
 
