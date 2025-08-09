@@ -5,22 +5,11 @@ import { handleCors } from './utils/cors';
 const yoga = createYoga({
   schema,
   cors: {
-    origin: (origin) => {
-      // 允许的域名列表
-      const allowedOrigins = [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'https://ai-chat-box.pages.dev',
-        'https://your-domain.com'
-      ];
-      
-      if (!origin) return true; // 允许无 origin 的请求（如 Postman）
-      return allowedOrigins.includes(origin);
-    },
+    origin: '*', // 简化CORS配置，允许所有来源
     credentials: true,
   },
   graphiql: {
-    // 仅在开发环境启用 GraphiQL
+    // 启用 GraphiQL
     enabled: true,
   },
 });
@@ -46,7 +35,7 @@ export default {
     } catch (error) {
       console.error('Workers error:', error);
       return new Response(
-        JSON.stringify({ error: 'Internal server error' }),
+        JSON.stringify({ error: 'Internal server error', details: error.message }),
         {
           status: 500,
           headers: {
