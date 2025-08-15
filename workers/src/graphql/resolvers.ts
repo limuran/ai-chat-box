@@ -2,6 +2,11 @@ import { ClaudeService } from '../services/claude';
 import { MastraService } from '../services/mastra';
 import { GraphQLContext, SendMessageInput, Message, CodeReviewInput } from './types';
 
+// 辅助函数：获取 API 密钥
+function getApiKey(env: GraphQLContext['env']): string | null {
+  return env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY || null;
+}
+
 export const resolvers = {
   Query: {
     health: () => {
@@ -31,22 +36,27 @@ export const resolvers = {
       context: GraphQLContext
     ) => {
       try {
-        if (!context.env.CLAUDE_API_KEY) {
+        const apiKey = getApiKey(context.env);
+        
+        if (!apiKey) {
           return {
             valid: false,
-            error: 'Claude API Key 未配置'
+            error: 'API 密钥未配置 - 请设置 ANTHROPIC_API_KEY 或 CLAUDE_API_KEY'
           };
         }
 
-        const claudeService = new ClaudeService(context.env.CLAUDE_API_KEY);
+        console.log('🔑 [API-KEY] Validating API key...');
+        const claudeService = new ClaudeService(apiKey);
         const isValid = await claudeService.validateApiKey();
+        
+        console.log(`✅ [API-KEY] Validation result: ${isValid}`);
         
         return {
           valid: isValid,
           error: isValid ? null : 'API 密钥无效或网络连接问题'
         };
       } catch (error) {
-        console.error('API key validation error:', error);
+        console.error('❌ [API-KEY] Validation error:', error);
         return {
           valid: false,
           error: error instanceof Error ? error.message : '验证失败'
@@ -61,20 +71,26 @@ export const resolvers = {
       context: GraphQLContext
     ) => {
       try {
-        if (!context.env.CLAUDE_API_KEY) {
+        const apiKey = getApiKey(context.env);
+        
+        if (!apiKey) {
           return {
             status: 'error',
             agents: [],
             timestamp: new Date().toISOString(),
-            error: 'Claude API Key 未配置'
+            error: 'API 密钥未配置 - 请设置 ANTHROPIC_API_KEY 或 CLAUDE_API_KEY'
           };
         }
 
+        console.log('🏥 [MASTRA-HEALTH] Checking Mastra health...');
+
         const mastraService = new MastraService({
-          claudeApiKey: context.env.CLAUDE_API_KEY
+          claudeApiKey: apiKey
         });
 
         const healthStatus = await mastraService.healthCheck();
+        
+        console.log(`📊 [MASTRA-HEALTH] Status: ${healthStatus.status}`);
         
         const agents = Object.entries(healthStatus.agents || {}).map(([name, available]) => ({
           name,
@@ -88,7 +104,7 @@ export const resolvers = {
           error: healthStatus.error || null
         };
       } catch (error) {
-        console.error('Mastra health check error:', error);
+        console.error('❌ [MASTRA-HEALTH] Error:', error);
         return {
           status: 'error',
           agents: [],
@@ -115,18 +131,20 @@ export const resolvers = {
           };
         }
 
-        if (!context.env.CLAUDE_API_KEY) {
+        const apiKey = getApiKey(context.env);
+        
+        if (!apiKey) {
           return {
             success: false,
-            error: 'Claude API Key 未配置',
+            error: 'API 密钥未配置 - 请设置 ANTHROPIC_API_KEY 或 CLAUDE_API_KEY',
           };
         }
 
-        console.log('Processing message with Mastra integration');
+        console.log('📨 [SEND-MESSAGE] Processing message with Mastra integration');
         
         // 创建 Mastra 服务实例
         const mastraService = new MastraService({
-          claudeApiKey: context.env.CLAUDE_API_KEY
+          claudeApiKey: apiKey
         });
 
         // 映射 GraphQL agentType 到 Mastra agentType
@@ -164,9 +182,10 @@ export const resolvers = {
           message: assistantMessage,
           agentUsed: result.agentUsed,
           toolsUsed: result.toolsUsed || [],
+          processingMethod: result.processingMethod || 'MASTRA',
         };
       } catch (error) {
-        console.error('SendMessage error:', error);
+        console.error('❌ [SEND-MESSAGE] Error:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : '未知错误',
@@ -192,19 +211,21 @@ export const resolvers = {
           };
         }
 
-        if (!context.env.CLAUDE_API_KEY) {
+        const apiKey = getApiKey(context.env);
+        
+        if (!apiKey) {
           return {
             success: false,
             content: '',
             agentUsed: '',
-            error: 'Claude API Key 未配置',
+            error: 'API 密钥未配置 - 请设置 ANTHROPIC_API_KEY 或 CLAUDE_API_KEY',
           };
         }
 
-        console.log('Starting code review with Mastra');
+        console.log('🔍 [CODE-REVIEW] Starting code review with Mastra');
         
         const mastraService = new MastraService({
-          claudeApiKey: context.env.CLAUDE_API_KEY
+          claudeApiKey: apiKey
         });
 
         const result = await mastraService.reviewCode(code, language, codeContext);
@@ -214,9 +235,10 @@ export const resolvers = {
           content: result.content,
           agentUsed: result.agentUsed,
           error: result.success ? null : '代码审查失败',
+          processingMethod: result.processingMethod || 'MASTRA',
         };
       } catch (error) {
-        console.error('Code review error:', error);
+        console.error('❌ [CODE-REVIEW] Error:', error);
         return {
           success: false,
           content: '',
