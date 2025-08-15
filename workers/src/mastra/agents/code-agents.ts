@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { Agent } from '@mastra/core/agent';
+import { Agent } from '@mastra/core';
 import { Memory } from '@mastra/memory';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from '../tools/code-tools';
 
