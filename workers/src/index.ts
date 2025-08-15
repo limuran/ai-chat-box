@@ -53,13 +53,33 @@ export default {
         );
       }
 
+      console.log('🔑 [MAIN] API key found, length:', apiKey.length);
+
+      // 在 Cloudflare Workers 环境中设置全局环境变量
+      // 这样 @ai-sdk/anthropic 可以自动发现它
+      if (typeof globalThis !== 'undefined') {
+        (globalThis as any).ANTHROPIC_API_KEY = apiKey;
+        console.log('🌍 [MAIN] Set ANTHROPIC_API_KEY in globalThis');
+      }
+
+      // 也尝试设置 process.env（如果存在）
+      if (typeof process !== 'undefined' && process.env) {
+        process.env.ANTHROPIC_API_KEY = apiKey;
+        console.log('🔧 [MAIN] Set ANTHROPIC_API_KEY in process.env');
+      }
+
       // 使用 API 密钥创建 Mastra 实例
       const mastra = createMastra(apiKey);
       console.log('Mastra initialized successfully with API key');
       
       // 将环境变量和 Mastra 实例注入到上下文中
       return await yoga.fetch(request, {
-        env,
+        env: {
+          ...env,
+          // 确保 API 密钥在上下文中可用
+          ANTHROPIC_API_KEY: apiKey,
+          CLAUDE_API_KEY: apiKey,
+        },
         ctx,
         mastra, // 将正确配置的 Mastra 实例传递给 GraphQL 上下文
       });
