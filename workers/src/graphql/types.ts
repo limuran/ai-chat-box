@@ -1,3 +1,5 @@
+import type { Mastra } from '@mastra/core/mastra';
+
 export interface Message {
   id: string;
   content: string;
@@ -50,4 +52,5 @@ export interface GraphQLContext {
     ENVIRONMENT?: string;
   };
   ctx: ExecutionContext;
+  mastra?: Mastra; // 添加 Mastra 实例到上下文
 }
