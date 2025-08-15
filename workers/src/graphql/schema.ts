@@ -24,17 +24,53 @@ const typeDefs = /* GraphQL */ `
   input SendMessageInput {
     content: String!
     conversationHistory: [MessageInput!]
+    agentType: AgentType
+  }
+
+  enum AgentType {
+    CODE_REVIEW_AGENT
+    GENERAL_CODING_AGENT
+    AUTO_SELECT
   }
 
   type ChatResponse {
     success: Boolean!
     message: Message
     error: String
+    agentUsed: String
+    toolsUsed: [String!]
   }
 
   type ApiKeyValidation {
     valid: Boolean!
     error: String
+  }
+
+  # 代码审查相关类型
+  input CodeReviewInput {
+    code: String!
+    language: String
+    context: String
+  }
+
+  type CodeReviewResponse {
+    success: Boolean!
+    content: String!
+    agentUsed: String!
+    error: String
+  }
+
+  # Mastra 健康检查
+  type MastraHealthCheck {
+    status: String!
+    agents: [AgentStatus!]!
+    timestamp: String!
+    error: String
+  }
+
+  type AgentStatus {
+    name: String!
+    available: Boolean!
   }
 
   type Query {
@@ -44,11 +80,17 @@ const typeDefs = /* GraphQL */ `
     availableModels: [String!]!
     # 验证API密钥状态
     validateApiKey: ApiKeyValidation!
+    # Mastra 健康检查
+    mastraHealth: MastraHealthCheck!
+    # 获取可用的 agents
+    availableAgents: [String!]!
   }
 
   type Mutation {
-    # 发送消息给 Claude AI
+    # 发送消息给 Claude AI (现在支持 Mastra)
     sendMessage(input: SendMessageInput!): ChatResponse!
+    # 专门的代码审查功能
+    reviewCode(input: CodeReviewInput!): CodeReviewResponse!
     # 清理对话历史
     clearConversation: Boolean!
   }
