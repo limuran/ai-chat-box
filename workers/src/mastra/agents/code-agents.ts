@@ -5,9 +5,12 @@ import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from '../to
 
 // 创建一个工厂函数来根据环境变量创建 agents
 export const createAgents = (apiKey: string) => {
+  // 确保 API 密钥被正确传递给 Anthropic 客户端
   const anthropicClient = anthropic('claude-3-5-sonnet-20241022', {
-    apiKey,
+    apiKey: apiKey, // 显式传递 API 密钥
   });
+
+  console.log('🤖 [AGENTS] Creating agents with API key:', apiKey ? 'Set' : 'Missing');
 
   const codeReviewAgent = new Agent({
     name: 'Code Review Agent',
@@ -98,6 +101,8 @@ export const createAgents = (apiKey: string) => {
     },
   });
 
+  console.log('✅ [AGENTS] Successfully created codeReviewAgent and generalCodingAgent');
+
   return {
     codeReviewAgent,
     generalCodingAgent,
@@ -105,4 +110,4 @@ export const createAgents = (apiKey: string) => {
 };
 
 // 为了向后兼容，导出默认的 agents (在没有 API key 时会失败)
-export const { codeReviewAgent, generalCodingAgent } = createAgents('');
+export const { codeReviewAgent, generalCodingAgent } = createAgents('placeholder-key');
