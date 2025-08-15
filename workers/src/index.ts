@@ -1,7 +1,13 @@
 import { createYoga } from 'graphql-yoga';
 import { schema } from './graphql/schema';
 import { handleCors } from './utils/cors';
-import { mastra } from './mastra';
+import { createMastra } from './mastra';
+
+export interface Env {
+  CLAUDE_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
+  ENVIRONMENT?: string;
+}
 
 const yoga = createYoga({
   schema,
@@ -15,11 +21,6 @@ const yoga = createYoga({
   },
 });
 
-export interface Env {
-  CLAUDE_API_KEY: string;
-  ENVIRONMENT?: string;
-}
-
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // 处理预检请求
@@ -28,14 +29,36 @@ export default {
     }
 
     try {
-      // 初始化 Mastra 实例 (确保在 Workers 环境中正确配置)
-      console.log('Initializing Mastra in Cloudflare Workers environment');
+      // 获取 API 密钥
+      const apiKey = env.ANTHROPIC_API_KEY || env.CLAUDE_API_KEY;
+      
+      if (!apiKey) {
+        console.error('Missing API key: Please set ANTHROPIC_API_KEY or CLAUDE_API_KEY');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Configuration error', 
+            message: 'API key not configured. Please set ANTHROPIC_API_KEY or CLAUDE_API_KEY in your Cloudflare Workers environment.',
+            timestamp: new Date().toISOString(),
+          }),
+          {
+            status: 500,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+          }
+        );
+      }
+
+      // 使用 API 密钥创建 Mastra 实例
+      const mastra = createMastra(apiKey);
+      console.log('Mastra initialized successfully with API key');
       
       // 将环境变量和 Mastra 实例注入到上下文中
       return await yoga.fetch(request, {
         env,
         ctx,
-        mastra, // 将 Mastra 实例传递给 GraphQL 上下文
+        mastra, // 将正确配置的 Mastra 实例传递给 GraphQL 上下文
       });
     } catch (error) {
       console.error('Workers error:', error);
