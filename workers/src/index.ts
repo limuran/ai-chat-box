@@ -1,6 +1,7 @@
 import { createYoga } from 'graphql-yoga';
 import { schema } from './graphql/schema';
 import { handleCors } from './utils/cors';
+import { mastra } from './mastra';
 
 const yoga = createYoga({
   schema,
@@ -27,15 +28,23 @@ export default {
     }
 
     try {
-      // 将环境变量注入到上下文中
+      // 初始化 Mastra 实例 (确保在 Workers 环境中正确配置)
+      console.log('Initializing Mastra in Cloudflare Workers environment');
+      
+      // 将环境变量和 Mastra 实例注入到上下文中
       return await yoga.fetch(request, {
         env,
         ctx,
+        mastra, // 将 Mastra 实例传递给 GraphQL 上下文
       });
     } catch (error) {
       console.error('Workers error:', error);
       return new Response(
-        JSON.stringify({ error: 'Internal server error', details: error.message }),
+        JSON.stringify({ 
+          error: 'Internal server error', 
+          details: error instanceof Error ? error.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        }),
         {
           status: 500,
           headers: {
@@ -47,3 +56,6 @@ export default {
     }
   },
 };
+
+// 导出类型供其他模块使用
+export type { Env };
