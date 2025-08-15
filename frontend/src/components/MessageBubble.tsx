@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Message } from '../types/chat';
 import { User, Bot, Copy, Check } from 'lucide-react';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface MessageBubbleProps {
   message: Message;
@@ -50,9 +51,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
             ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md'
             : 'bg-white text-gray-800 border border-gray-100 rounded-bl-md'
         }`}>
-          <p className="whitespace-pre-wrap break-words leading-relaxed">
-            {message.content}
-          </p>
+          {/* 使用 MarkdownRenderer 来正确渲染内容 */}
+          {isUser ? (
+            // 用户消息保持简单的文本显示
+            <p className="whitespace-pre-wrap break-words leading-relaxed">
+              {message.content}
+            </p>
+          ) : (
+            // AI 回复使用 Markdown 渲染
+            <div className="prose prose-sm max-w-none">
+              <MarkdownRenderer 
+                content={message.content} 
+                className="text-gray-800"
+              />
+            </div>
+          )}
           
           {/* 复制按钮 */}
           <button
