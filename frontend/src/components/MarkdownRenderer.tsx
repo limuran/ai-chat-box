@@ -19,37 +19,37 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         components={{
           // 自定义组件样式
           h1: ({ children }) => (
-            <h1 className="text-2xl font-bold mb-4 text-gray-800 border-b border-gray-200 pb-2">
+            <h1 className="text-lg font-bold mb-3 text-current border-b border-current/20 pb-2">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-xl font-semibold mb-3 text-gray-800 mt-6">
+            <h2 className="text-base font-semibold mb-2 text-current mt-4">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-lg font-semibold mb-2 text-gray-700 mt-4">
+            <h3 className="text-sm font-semibold mb-2 text-current mt-3">
               {children}
             </h3>
           ),
           h4: ({ children }) => (
-            <h4 className="text-base font-semibold mb-2 text-gray-700 mt-3">
+            <h4 className="text-sm font-semibold mb-1 text-current mt-2">
               {children}
             </h4>
           ),
           p: ({ children }) => (
-            <p className="mb-3 leading-relaxed text-gray-700">
+            <p className="mb-2 leading-relaxed text-current">
               {children}
             </p>
           ),
           ul: ({ children }) => (
-            <ul className="list-disc list-inside mb-3 space-y-1 text-gray-700">
+            <ul className="list-disc list-inside mb-2 space-y-1 text-current pl-2">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal list-inside mb-3 space-y-1 text-gray-700">
+            <ol className="list-decimal list-inside mb-2 space-y-1 text-current pl-2">
               {children}
             </ol>
           ),
@@ -59,31 +59,31 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
             </li>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-200 pl-4 py-2 my-3 bg-blue-50 italic text-gray-600">
+            <blockquote className="border-l-2 border-current/30 pl-3 py-1 my-2 bg-current/5 italic">
               {children}
             </blockquote>
           ),
           code: ({ inline, className, children }) => {
             if (inline) {
               return (
-                <code className="bg-gray-100 text-red-600 px-1 py-0.5 rounded text-sm font-mono">
+                <code className="bg-gray-800 text-gray-100 px-1 py-0.5 rounded text-xs font-mono">
                   {children}
                 </code>
               );
             }
             
             // 提取语言信息
-            const match = /language-(\w+)/.exec(className || '');
+            const match = /language-(\\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             
             return (
-              <div className="relative group">
+              <div className="relative group my-2">
                 {language && (
-                  <div className="absolute top-2 right-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     {language.toUpperCase()}
                   </div>
                 )}
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-3">
+                <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto">
                   <code className={className}>
                     {children}
                   </code>
@@ -92,29 +92,29 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
             );
           },
           table: ({ children }) => (
-            <div className="overflow-x-auto my-4">
-              <table className="min-w-full border border-gray-300 rounded-lg">
+            <div className="overflow-x-auto my-3">
+              <table className="min-w-full border border-current/20 rounded text-xs">
                 {children}
               </table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="bg-gray-50">
+            <thead className="bg-current/10">
               {children}
             </thead>
           ),
           tbody: ({ children }) => (
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-current/10">
               {children}
             </tbody>
           ),
           th: ({ children }) => (
-            <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700 border-b border-gray-300">
+            <th className="px-2 py-1 text-left text-xs font-semibold text-current border-b border-current/20">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+            <td className="px-2 py-1 text-xs text-current border-b border-current/10">
               {children}
             </td>
           ),
@@ -123,23 +123,23 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
               href={href} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 underline"
+              className="text-blue-300 hover:text-blue-200 underline"
             >
               {children}
             </a>
           ),
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-800">
+            <strong className="font-semibold text-current">
               {children}
             </strong>
           ),
           em: ({ children }) => (
-            <em className="italic text-gray-700">
+            <em className="italic text-current">
               {children}
             </em>
           ),
           hr: () => (
-            <hr className="my-6 border-gray-300" />
+            <hr className="my-3 border-current/30" />
           ),
         }}
       >
