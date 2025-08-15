@@ -1,266 +1,291 @@
-# AI Chat Box - Cloudflare Workers + GraphQL
+# AI Chat Box with Mastra Integration
 
-基于 React + TypeScript + GraphQL + Cloudflare Workers 构建的现代化 AI 聊天界面，集成 Claude AI。
+一个现代化的 AI 聊天应用，集成了 Mastra AI 框架，支持智能代码审查和多Agent系统。
 
-## 🏗️ 项目架构
+## 🚀 核心特性
+
+### 🤖 Mastra AI 框架集成
+- **CloudflareDeployer**: 使用官方 Mastra Cloudflare 部署器
+- **智能Agent系统**: 自动选择最适合的AI助手
+- **代码审查专家**: 专业的代码分析和优化建议
+- **编程助手**: 全能的技术问题解决方案
+
+### 🔍 代码审查功能
+- 深度代码质量分析（1-10分评分）
+- 安全漏洞检测和建议
+- 性能优化指导
+- 最佳实践建议
+- 支持15+编程语言
+
+## 🏗️ 技术架构
+
+```
+React Frontend (TypeScript)
+    ↓ GraphQL API
+Cloudflare Workers + Mastra Framework
+    ↓ CloudflareDeployer
+Claude AI (Anthropic)
+```
+
+## 📦 项目结构
 
 ```
 ai-chat-box/
-├── workers/                    # Cloudflare Workers 后端
-│   ├── src/
-│   │   ├── index.ts           # Workers 入口
-│   │   ├── graphql/           # GraphQL 相关
-│   │   ├── services/          # Claude API 服务
-│   │   └── utils/             # 工具函数
-│   ├── wrangler.toml          # Cloudflare 配置
-│   └── package.json
-├── frontend/                   # React 前端
-│   ├── src/
-│   │   ├── components/        # React 组件
-│   │   ├── services/          # GraphQL 客户端
-│   │   ├── hooks/             # 自定义 Hooks
-│   │   └── types/             # TypeScript 类型
-│   └── package.json
-└── README.md
+├── src/                          # React 前端
+│   ├── components/
+│   │   ├── ChatBox.tsx          # 主聊天界面
+│   │   └── CodeReviewModal.tsx  # 代码审查模态框
+│   └── services/
+│       └── graphql.ts           # GraphQL 客户端
+├── workers/                      # Cloudflare Workers + Mastra
+│   ├── mastra.config.ts         # Mastra 配置文件
+│   ├── package.json             # Mastra + Workers 依赖
+│   └── src/
+│       ├── mastra/              # Mastra 组件
+│       │   ├── agents/          # AI Agents
+│       │   ├── tools/           # AI 工具
+│       │   └── index.ts         # Mastra 主配置
+│       ├── graphql/             # GraphQL API
+│       └── services/            # 服务层
+└── deploy-mastra.sh             # Mastra 部署脚本
 ```
-
-## 🌐 技术栈
-
-**后端 (Cloudflare Workers)**
-- Cloudflare Workers Runtime
-- GraphQL with graphql-yoga
-- Claude AI SDK
-- TypeScript
-
-**前端 (React)**
-- React 18 + TypeScript
-- Apollo Client (GraphQL)
-- Tailwind CSS
-- Vite Build Tool
-- Lucide React Icons
 
 ## 🚀 快速开始
 
-### 1. 部署 Cloudflare Workers
+### 1. 环境准备
 
 ```bash
-cd workers
+# 克隆项目
+git clone https://github.com/limuran/ai-chat-box.git
+cd ai-chat-box
+
+# 安装前端依赖
 npm install
 
-# 设置环境变量
-wrangler secret put CLAUDE_API_KEY
-# 输入你的 Claude API Key
-
-# 部署到 Cloudflare
-npm run deploy
-```
-
-### 2. 配置并运行前端
-
-```bash
-cd frontend
-npm install
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件，设置 Workers 的 GraphQL 端点
-
-# 启动开发服务器
-npm run dev
-```
-
-## 🔧 环境配置
-
-### Workers 环境变量
-
-```bash
-# 使用 wrangler 设置密钥
-wrangler secret put CLAUDE_API_KEY
-```
-
-### 前端环境变量
-
-```env
-# .env 文件
-# 本地开发
-VITE_GRAPHQL_ENDPOINT=http://localhost:8787/graphql
-
-# 生产环境（替换为你的 Workers 域名）
-VITE_GRAPHQL_ENDPOINT=https://your-workers.your-subdomain.workers.dev/graphql
-```
-
-## 📦 部署指南
-
-### 部署 Workers
-
-1. **安装 Wrangler CLI**
-```bash
-npm install -g wrangler
-wrangler login
-```
-
-2. **配置项目**
-```bash
+# 安装 Workers + Mastra 依赖
 cd workers
 npm install
 ```
 
-3. **设置环境变量**
-```bash
-wrangler secret put CLAUDE_API_KEY
-```
+### 2. 配置 Mastra
 
-4. **部署**
-```bash
-npm run deploy
-```
-
-### 部署前端
-
-#### 选项 1: Cloudflare Pages
-1. 连接 GitHub 仓库到 Cloudflare Pages
-2. 设置构建配置：
-   - 构建命令: `cd frontend && npm install && npm run build`
-   - 构建输出目录: `frontend/dist`
-   - 根目录: `/`
-3. 设置环境变量 `VITE_GRAPHQL_ENDPOINT`
-4. 部署
-
-#### 选项 2: Vercel
-1. 导入 GitHub 仓库到 Vercel
-2. 设置项目配置：
-   - Framework: Vite
-   - Root Directory: `frontend`
-3. 设置环境变量 `VITE_GRAPHQL_ENDPOINT`
-4. 部署
-
-## 🔑 获取 Claude API 密钥
-
-1. 访问 [Anthropic Console](https://console.anthropic.com/)
-2. 注册/登录账户
-3. 创建新的 API 密钥
-4. 复制密钥用于 Workers 环境变量
-
-## 🎯 功能特性
-
-- 🎨 **现代化界面**: 使用 Tailwind CSS 构建的响应式设计
-- 💬 **实时对话**: 与 Claude AI 进行智能对话
-- 🔄 **GraphQL API**: 类型安全的 API 通信
-- ⚡ **边缘计算**: Cloudflare Workers 全球加速
-- 🔐 **安全性**: API 密钥在服务端，前端不暴露
-- 📱 **响应式**: 完美适配桌面和移动设备
-- 🎵 **动画效果**: 流畅的交互动画
-- 📝 **消息管理**: 支持复制、清空对话等功能
-
-## 🛠️ 开发指南
-
-### 本地开发
-
-1. **启动 Workers 开发服务器**
-```bash
-cd workers
-npm run dev
-# 访问 http://localhost:8787/graphql 查看 GraphiQL
-```
-
-2. **启动前端开发服务器**
-```bash
-cd frontend
-npm run dev
-# 访问 http://localhost:3000
-```
-
-### GraphQL Schema
-
-```graphql
-type Query {
-  health: String!
-  availableModels: [String!]!
-}
-
-type Mutation {
-  sendMessage(input: SendMessageInput!): ChatResponse!
-  clearConversation: Boolean!
-}
-
-type Message {
-  id: ID!
-  content: String!
-  role: MessageRole!
-  timestamp: String!
-}
-
-enum MessageRole {
-  USER
-  ASSISTANT
-}
-```
-
-## 🔧 自定义配置
-
-### 修改 Claude 模型
-
-在 `workers/src/services/claude.ts` 中修改：
+确保 `workers/mastra.config.ts` 正确配置：
 
 ```typescript
-const response = await this.client.messages.create({
-  model: 'claude-3-sonnet-20240229', // 可选: haiku, sonnet, opus
-  max_tokens: 1000,
-  temperature: 0.7,
-  messages: claudeMessages,
-});
+import { Config } from '@mastra/core';
+
+export default {
+  name: 'ai-chat-mastra',
+  engine: 'cloudflare',
+  agents: './src/mastra/agents',
+  tools: './src/mastra/tools',
+  llms: [
+    {
+      provider: 'ANTHROPIC',
+      name: 'claude-3-5-sonnet-20241022',
+    },
+  ],
+} satisfies Config;
 ```
 
-### 自定义样式
-
-前端使用 Tailwind CSS，可以在 `frontend/src/components/` 中修改组件样式。
-
-## 🚨 故障排除
-
-### 常见问题
-
-1. **Workers 部署失败**
-   - 检查 `wrangler.toml` 配置
-   - 确保已登录 Cloudflare: `wrangler login`
-
-2. **GraphQL 连接失败**
-   - 检查 `VITE_GRAPHQL_ENDPOINT` 环境变量
-   - 确保 Workers 已正确部署
-
-3. **Claude API 错误**
-   - 验证 API 密钥是否正确
-   - 检查 API 配额和权限
-
-### 调试模式
+### 3. 本地开发
 
 ```bash
-# Workers 日志
-wrangler tail
+# 启动前端开发服务器
+npm run dev
 
-# 前端调试
-# 打开浏览器开发者工具查看 Network 和 Console
+# 启动 Mastra + Workers 开发服务器
+cd workers
+npm run dev
 ```
 
-## 📄 License
+### 4. 部署到 Cloudflare (推荐使用 Mastra 部署脚本)
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+```bash
+# 使用 Mastra 专用部署脚本
+chmod +x deploy-mastra.sh
+./deploy-mastra.sh
+```
 
-## 🤝 贡献
+或手动部署：
 
-欢迎提交 Issue 和 Pull Request！
+```bash
+# 登录 Cloudflare
+cd workers
+npx wrangler login
+
+# 设置环境变量
+npx wrangler secret put CLAUDE_API_KEY
+
+# 使用 Mastra 构建
+npx mastra build
+
+# 部署 Workers
+npx wrangler deploy
+```
+
+## 🎯 Mastra 特性
+
+### Agent 系统
+- **codeReviewAgent**: 专业代码审查和安全分析
+- **generalCodingAgent**: 通用编程问题解决
+
+### 智能选择逻辑
+系统自动根据消息内容选择最适合的Agent：
+- 代码块或审查关键词 → 代码审查专家
+- 一般编程问题 → 编程助手
+- 支持手动指定Agent类型
+
+### 工具集
+- **codeReviewTool**: 代码质量分析
+- **codeOptimizationTool**: 代码优化建议
+- **codeExplanationTool**: 代码解释和文档
+
+## 🔧 配置选项
+
+### 环境变量 (Cloudflare Workers Secrets)
+- `CLAUDE_API_KEY`: Anthropic Claude API 密钥
+- `ENVIRONMENT`: 运行环境 (development/production)
+
+### Mastra 配置
+- 使用 `CloudflareDeployer` 进行标准部署
+- 内存存储适配 Cloudflare Workers 环境
+- 自动处理Agent和Tool注册
+
+## 📊 使用指南
+
+### 1. 智能对话
+- 在聊天界面输入问题
+- 系统自动选择最适合的Agent
+- 获得专业的AI回答
+
+### 2. 代码审查
+- 点击"🔍 代码审查"按钮
+- 粘贴代码并选择编程语言
+- 获得详细的分析报告
+
+### 3. Agent 选择
+- **自动选择**: 让AI判断使用哪个Agent
+- **代码审查专家**: 专门用于代码分析
+- **编程助手**: 用于一般编程问题
+
+## 🔄 GraphQL API
+
+### 核心查询和变更
+
+#### 发送消息
+```graphql
+mutation SendMessage($input: SendMessageInput!) {
+  sendMessage(input: $input) {
+    success
+    message {
+      id
+      content
+      role
+      timestamp
+    }
+    agentUsed
+    toolsUsed
+    error
+  }
+}
+```
+
+#### 代码审查
+```graphql
+mutation ReviewCode($input: CodeReviewInput!) {
+  reviewCode(input: $input) {
+    success
+    content
+    agentUsed
+    error
+  }
+}
+```
+
+#### Mastra 健康检查
+```graphql
+query GetMastraHealth {
+  mastraHealth {
+    status
+    agents {
+      name
+      available
+    }
+    timestamp
+    error
+  }
+}
+```
+
+## 🛠️ 开发最佳实践
+
+### Mastra Agent 开发
+1. 继承 `Agent` 基类
+2. 定义清晰的 instructions
+3. 配置合适的工具集
+4. 使用 CloudflareDeployer
+
+### 错误处理
+- 完善的回退机制到原始Claude服务
+- 详细的错误日志和调试信息
+- 用户友好的错误提示
+
+### 性能优化
+- 智能Agent选择减少不必要处理
+- 内存缓存常见查询
+- 边缘计算优化
+
+## 🧪 测试
+
+### 建议测试场景
+1. **普通对话**: 验证编程助手选择
+2. **代码消息**: 验证代码审查专家选择
+3. **专用审查**: 测试代码审查功能
+4. **错误处理**: 验证回退机制
+5. **多语言**: 测试不同编程语言支持
+
+### 健康检查
+```bash
+# 检查 Mastra 服务状态
+curl -X POST https://your-workers.dev/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ mastraHealth { status agents { name available } } }"}'
+```
+
+## 🔒 安全性
+
+- API密钥通过Cloudflare Workers Secrets安全存储
+- 输入验证和清理
+- CORS配置
+- 错误信息不泄露敏感数据
+
+## 📈 监控
+
+- Cloudflare Analytics集成
+- Mastra内置执行追踪
+- 自定义指标监控
+- 实时错误报告
+
+## 🤝 贡献指南
+
+1. Fork 项目
+2. 创建功能分支
+3. 遵循 Mastra 开发规范
+4. 提交 Pull Request
+
+## 📄 许可证
+
+MIT License - 查看 [LICENSE](LICENSE) 文件
 
 ## 🙏 致谢
 
-- [Anthropic](https://www.anthropic.com/) - Claude AI API
-- [Cloudflare](https://www.cloudflare.com/) - Workers 平台
-- [Apollo GraphQL](https://www.apollographql.com/) - GraphQL 客户端
-- [React](https://reactjs.org/) - 前端框架
-- [Tailwind CSS](https://tailwindcss.com/) - CSS 框架
+- [Mastra](https://mastra.ai/) - AI框架支持
+- [Anthropic Claude](https://www.anthropic.com/) - AI模型
+- [Cloudflare Workers](https://workers.cloudflare.com/) - 边缘计算
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给它一个 Star！
+**注意**: 这个版本使用了 Mastra 的 CloudflareDeployer，遵循官方最佳实践。如果你遇到任何问题，请参考 [Mastra 文档](https://docs.mastra.ai) 或提交 Issue。
 
-🌐 **在线演示**: [https://your-demo-url.com](https://your-demo-url.com)
-
-📧 **联系我们**: 有问题请创建 Issue
+⭐️ 如果这个项目对你有帮助，请给个星星支持！

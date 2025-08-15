@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import CodeReviewModal from './CodeReviewModal';
+import MarkdownRenderer from './MarkdownRenderer';
 import { graphqlService, Message, SendMessageInput } from '../services/graphql';
 
 const ChatBox: React.FC = () => {
@@ -76,7 +77,7 @@ const ChatBox: React.FC = () => {
         // 将代码审查结果作为消息添加到聊天中
         const reviewMessage: Message = {
           id: Date.now().toString(),
-          content: `🔍 **代码审查结果** (使用 ${response.agentUsed})\n\n${response.content}`,
+          content: `## 🔍 代码审查结果\n\n**使用 Agent**: ${response.agentUsed}\n\n---\n\n${response.content}`,
           role: 'ASSISTANT',
           timestamp: new Date().toISOString(),
         };
@@ -104,17 +105,32 @@ const ChatBox: React.FC = () => {
     }
   };
 
-  const formatMessage = (content: string) => {
-    // 简单的 markdown 支持
-    return content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code class="bg-gray-100 px-1 rounded">$1</code>')
-      .replace(/\n/g, '<br>');
+  const getAgentDisplayName = (agentType: string) => {
+    switch (agentType) {
+      case 'AUTO_SELECT':
+        return '自动选择';
+      case 'CODE_REVIEW_AGENT':
+        return '代码审查专家';
+      case 'GENERAL_CODING_AGENT':
+        return '编程助手';
+      default:
+        return agentType;
+    }
+  };
+
+  const getAgentIcon = (agentType: string) => {
+    switch (agentType) {
+      case 'CODE_REVIEW_AGENT':
+        return '🔍';
+      case 'GENERAL_CODING_AGENT':
+        return '💻';
+      default:
+        return '🤖';
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       {/* 头部工具栏 */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
         <div className="flex justify-between items-center flex-wrap gap-4">
@@ -130,9 +146,9 @@ const ChatBox: React.FC = () => {
                 className="bg-white text-gray-800 px-3 py-1 rounded text-sm"
                 disabled={isLoading}
               >
-                <option value="AUTO_SELECT">自动选择</option>
-                <option value="CODE_REVIEW_AGENT">代码审查专家</option>
-                <option value="GENERAL_CODING_AGENT">编程助手</option>
+                <option value="AUTO_SELECT">🤖 自动选择</option>
+                <option value="CODE_REVIEW_AGENT">🔍 代码审查专家</option>
+                <option value="GENERAL_CODING_AGENT">💻 编程助手</option>
               </select>
             </div>
 
@@ -180,6 +196,11 @@ const ChatBox: React.FC = () => {
             <div className="text-4xl mb-4">🤖</div>
             <p>欢迎使用 AI Chat Box with Mastra!</p>
             <p className="text-sm mt-2">支持智能对话和代码审查功能</p>
+            <div className="mt-4 text-xs space-y-1">
+              <p>💡 支持 Markdown 格式渲染</p>
+              <p>🔍 专业代码审查和分析</p>
+              <p>🤖 智能 Agent 自动选择</p>
+            </div>
           </div>
         ) : (
           messages.map((message) => (
@@ -188,20 +209,33 @@ const ChatBox: React.FC = () => {
               className={`flex ${message.role === 'USER' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                className={`max-w-4xl px-4 py-3 rounded-lg ${
                   message.role === 'USER'
                     ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-800'
+                    : 'bg-gray-50 text-gray-800 border border-gray-200'
                 }`}
               >
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: formatMessage(message.content),
-                  }}
-                  className="text-sm leading-relaxed"
-                />
-                <div className="text-xs opacity-70 mt-1">
-                  {new Date(message.timestamp).toLocaleTimeString()}
+                {message.role === 'USER' ? (
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {message.content}
+                  </div>
+                ) : (
+                  <MarkdownRenderer 
+                    content={message.content}
+                    className="text-sm leading-relaxed"
+                  />
+                )}
+                
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200 border-opacity-30">
+                  <div className="text-xs opacity-70">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </div>
+                  {message.role === 'ASSISTANT' && (
+                    <div className="text-xs opacity-70 flex items-center space-x-1">
+                      <span>{getAgentIcon('ASSISTANT')}</span>
+                      <span>AI Assistant</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -211,10 +245,12 @@ const ChatBox: React.FC = () => {
         {/* 加载指示器 */}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg px-4 py-2">
+            <div className="bg-gray-100 rounded-lg px-4 py-3 border border-gray-200">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                <span className="text-sm text-gray-600">AI 正在思考...</span>
+                <span className="text-sm text-gray-600">
+                  {getAgentIcon(selectedAgent)} {getAgentDisplayName(selectedAgent)} 正在思考...
+                </span>
               </div>
             </div>
           </div>
@@ -230,7 +266,7 @@ const ChatBox: React.FC = () => {
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="输入您的消息..."
+            placeholder="输入您的消息... (支持 Markdown 格式)"
             className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
           />
@@ -241,6 +277,13 @@ const ChatBox: React.FC = () => {
           >
             发送
           </button>
+        </div>
+        
+        {/* 输入提示 */}
+        <div className="mt-2 text-xs text-gray-500 flex items-center space-x-4">
+          <span>💡 支持 Markdown 语法</span>
+          <span>🔍 可使用代码审查功能</span>
+          <span>当前: {getAgentIcon(selectedAgent)} {getAgentDisplayName(selectedAgent)}</span>
         </div>
       </form>
 

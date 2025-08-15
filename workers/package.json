@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "tail": "wrangler tail"
+    "tail": "wrangler tail",
+    "build": "mastra build",
+    "start": "mastra start"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
     "@anthropic-ai/sdk": "^0.24.3",
     "@mastra/core": "^0.13.1",
+    "@mastra/deployer-cloudflare": "^0.13.1",
     "@mastra/memory": "^0.12.1",
     "graphql": "^16.8.1",
     "graphql-yoga": "^5.0.0",
@@ -20,7 +23,9 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20231025.0",
     "@types/node": "^24.2.1",
+    "mastra": "^0.10.20",
     "typescript": "^5.0.2",
     "wrangler": "^3.0.0"
-  }
+  },
+  "type": "module"
 }

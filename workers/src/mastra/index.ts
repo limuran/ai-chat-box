@@ -1,25 +1,9 @@
 import { Mastra } from '@mastra/core/mastra';
-import { Memory } from '@mastra/memory';
+import { CloudflareDeployer } from '@mastra/deployer-cloudflare';
 import { codeReviewAgent, generalCodingAgent } from './agents/code-agents';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from './tools/code-tools';
 
-// Cloudflare Workers 环境的简单存储实现
-class WorkersMemoryStorage {
-  private storage = new Map<string, any>();
-
-  async get(key: string) {
-    return this.storage.get(key) || null;
-  }
-
-  async set(key: string, value: any) {
-    this.storage.set(key, value);
-  }
-
-  async delete(key: string) {
-    this.storage.delete(key);
-  }
-}
-
+// 创建 Mastra 实例，专门为 Cloudflare Workers 优化
 export const mastra = new Mastra({
   agents: { 
     codeReviewAgent, 
@@ -30,14 +14,15 @@ export const mastra = new Mastra({
     codeOptimizationTool,
     codeExplanationTool,
   },
-  // 在 Workers 环境中使用简单的内存存储
-  // 生产环境建议使用 Cloudflare KV 或 D1 数据库
-  memory: new Memory({
-    storage: new WorkersMemoryStorage()
+  // 使用 Cloudflare Workers 专用的部署器
+  deployer: new CloudflareDeployer({
+    // Cloudflare Workers 环境配置
+    environment: 'production',
+    // 这些配置会在部署时自动处理
   }),
 });
 
-// 导出 agent 类型以便在其他地方使用
+// 导出 agent 类型
 export type AgentType = 'codeReviewAgent' | 'generalCodingAgent';
 
 // 工具函数：根据消息内容自动选择合适的 agent
@@ -68,4 +53,123 @@ export function selectAppropriateAgent(message: string): AgentType {
 
   // 默认使用通用编程助手
   return 'generalCodingAgent';
+}
+
+// Cloudflare Workers 特定的 Mastra 处理函数
+export async function handleMastraRequest(
+  agentName: AgentType,
+  message: string,
+  conversationHistory: any[] = []
+) {
+  try {
+    // 获取指定的 agent
+    const agent = mastra.getAgent(agentName);
+    
+    if (!agent) {
+      throw new Error(`Agent ${agentName} not found`);
+    }
+
+    // 构建对话上下文
+    const messages = [
+      ...conversationHistory.map(msg => ({
+        role: msg.role === 'USER' ? 'user' : 'assistant',
+        content: msg.content,
+      })),
+      {
+        role: 'user',
+        content: message,
+      }
+    ];
+
+    // 使用 agent 生成响应
+    const result = await agent.generate(messages);
+
+    return {
+      success: true,
+      content: result.text,
+      agentUsed: agentName,
+      toolsUsed: result.toolCalls?.map(call => call.tool.id) || [],
+    };
+
+  } catch (error) {
+    console.error('Mastra request error:', error);
+    throw error;
+  }
+}
+
+// 专门用于代码审查的处理函数
+export async function handleCodeReview(
+  code: string, 
+  language?: string, 
+  context?: string
+) {
+  try {
+    const agent = mastra.getAgent('codeReviewAgent');
+    
+    if (!agent) {
+      throw new Error('Code review agent not found');
+    }
+
+    // 构建代码审查的特定提示
+    let prompt = `请对以下代码进行详细审查：\n\n`;
+    
+    if (language) {
+      prompt += `编程语言: ${language}\n`;
+    }
+    
+    if (context) {
+      prompt += `上下文信息: ${context}\n`;
+    }
+    
+    prompt += `\n代码内容:\n\`\`\`${language || ''}\n${code}\n\`\`\`\n\n`;
+    prompt += `请提供：\n`;
+    prompt += `1. 代码质量评分 (1-10分)\n`;
+    prompt += `2. 发现的问题和改进建议\n`;
+    prompt += `3. 安全性分析\n`;
+    prompt += `4. 性能优化建议\n`;
+    prompt += `5. 最佳实践建议`;
+
+    const result = await agent.generate([
+      {
+        role: 'user',
+        content: prompt,
+      }
+    ]);
+
+    return {
+      success: true,
+      content: result.text,
+      agentUsed: 'codeReviewAgent',
+      toolsUsed: result.toolCalls?.map(call => call.tool.id) || [],
+    };
+
+  } catch (error) {
+    console.error('Code review error:', error);
+    throw error;
+  }
+}
+
+// 健康检查函数
+export async function checkMastraHealth() {
+  try {
+    const agents = ['codeReviewAgent', 'generalCodingAgent'] as AgentType[];
+    const agentStatus: Record<string, boolean> = {};
+    
+    for (const agentType of agents) {
+      const agent = mastra.getAgent(agentType);
+      agentStatus[agentType] = !!agent;
+    }
+
+    return {
+      status: 'healthy',
+      agents: agentStatus,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
