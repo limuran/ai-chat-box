@@ -63,30 +63,34 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
               {children}
             </blockquote>
           ),
-          code: ({ inline, className, children }) => {
-            if (inline) {
+          code: ({ className, children, ...props }) => {
+            // 检查是否为内联代码（没有父级 pre 元素）
+            const isInline = !className || !className.includes('language-');
+            
+            if (isInline) {
               return (
-                <code className="bg-gray-800 text-gray-100 px-1 py-0.5 rounded text-xs font-mono">
+                <code className="bg-gray-800 text-gray-100 px-1 py-0.5 rounded text-xs font-mono" {...props}>
                   {children}
                 </code>
               );
             }
             
             // 提取语言信息
-            const match = /language-(\\w+)/.exec(className || '');
+            const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             
             return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
+          pre: ({ children }) => {
+            // 处理代码块容器
+            return (
               <div className="relative group my-2">
-                {language && (
-                  <div className="absolute top-2 right-2 text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    {language.toUpperCase()}
-                  </div>
-                )}
                 <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto">
-                  <code className={className}>
-                    {children}
-                  </code>
+                  {children}
                 </pre>
               </div>
             );
