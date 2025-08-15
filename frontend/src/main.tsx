@@ -4,6 +4,7 @@ import { ApolloProvider } from '@apollo/client'
 import { apolloClient } from './services/graphql'
 import App from './App'
 import './index.css'
+import './styles/markdown.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
