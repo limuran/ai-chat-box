@@ -3,7 +3,8 @@ import {
   handleCodeReview, 
   checkMastraHealth,
   selectAppropriateAgent, 
-  AgentType 
+  AgentType,
+  createMastra 
 } from '../mastra';
 import { ClaudeService } from './claude';
 
@@ -13,9 +14,13 @@ export interface MastraServiceConfig {
 
 export class MastraService {
   private config: MastraServiceConfig;
+  private mastra: any; // Mastra 实例
 
   constructor(config: MastraServiceConfig) {
     this.config = config;
+    // 使用 API 密钥创建 Mastra 实例
+    this.mastra = createMastra(config.claudeApiKey);
+    console.log('MastraService initialized with API key');
   }
 
   /**
@@ -32,8 +37,9 @@ export class MastraService {
       
       console.log(`Using agent: ${selectedAgent} for message: ${message.slice(0, 100)}...`);
 
-      // 使用 Mastra 的标准处理函数
+      // 使用 Mastra 的标准处理函数，传递 Mastra 实例
       const result = await handleMastraRequest(
+        this.mastra,
         selectedAgent,
         message,
         conversationHistory
@@ -55,7 +61,7 @@ export class MastraService {
    */
   async reviewCode(code: string, language?: string, context?: string) {
     try {
-      const result = await handleCodeReview(code, language, context);
+      const result = await handleCodeReview(this.mastra, code, language, context);
       return result;
     } catch (error) {
       console.error('Code review error:', error);
@@ -112,7 +118,7 @@ export class MastraService {
    */
   async healthCheck() {
     try {
-      const healthStatus = await checkMastraHealth();
+      const healthStatus = await checkMastraHealth(this.mastra);
       
       // 转换格式以匹配 GraphQL 响应
       const agents = Object.entries(healthStatus.agents || {}).map(([name, available]) => ({
