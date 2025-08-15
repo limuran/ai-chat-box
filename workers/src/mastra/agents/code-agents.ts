@@ -11,19 +11,7 @@ export const createAgents = (apiKey: string) => {
     throw new Error('Invalid API key provided to createAgents');
   }
 
-  // 尝试不同的初始化方式
-  console.log('🔧 [AGENTS] Trying method 1: anthropic with explicit apiKey');
-  
-  // 方法1: 使用提供商配置
-  const anthropicProvider = anthropic({
-    apiKey: apiKey,
-  });
-  
-  const anthropicClient = anthropicProvider('claude-3-5-sonnet-20241022');
-
-  console.log('✅ [AGENTS] Anthropic client created with provider pattern');
-
-  // 设置环境变量作为备选
+  // 设置环境变量，这样 @ai-sdk/anthropic 可以自动发现它
   if (typeof globalThis !== 'undefined') {
     (globalThis as any).ANTHROPIC_API_KEY = apiKey;
     console.log('🌍 [AGENTS] Set ANTHROPIC_API_KEY in globalThis');
@@ -34,9 +22,18 @@ export const createAgents = (apiKey: string) => {
     console.log('🔑 [AGENTS] Set ANTHROPIC_API_KEY in process.env');
   }
 
-  const codeReviewAgent = new Agent({
-    name: 'Code Review Agent',
-    instructions: `
+  // 使用正确的 anthropic 初始化方式
+  // 根据文档，应该是 anthropic(model, options) 或者让它自动从环境变量读取
+  console.log('🔧 [AGENTS] Initializing Anthropic client...');
+  
+  try {
+    // 方法1: 直接使用模型名称，让它从环境变量读取 API key
+    const anthropicClient = anthropic('claude-3-5-sonnet-20241022');
+    console.log('✅ [AGENTS] Anthropic client created successfully');
+    
+    const codeReviewAgent = new Agent({
+      name: 'Code Review Agent',
+      instructions: `
 你是一位资深的代码审查专家，擅长多种编程语言的代码分析和优化。你的主要职责包括：
 
 ## 核心能力
@@ -67,33 +64,33 @@ export const createAgents = (apiKey: string) => {
 
 保持专业、友善的语调，提供建设性的反馈。
 `,
-    model: anthropicClient,
-    tools: { 
-      codeReviewTool, 
-      codeOptimizationTool, 
-      codeExplanationTool 
-    },
-    memory: new Memory({
-      // 在 Cloudflare Workers 环境中，我们使用内存存储
-      storage: {
-        async get(key: string) {
-          // 简单的内存实现，实际项目中可以用 KV 存储
-          return null;
-        },
-        async set(key: string, value: any) {
-          // 简单的内存实现
-          return;
-        },
-        async delete(key: string) {
-          return;
+      model: anthropicClient,
+      tools: { 
+        codeReviewTool, 
+        codeOptimizationTool, 
+        codeExplanationTool 
+      },
+      memory: new Memory({
+        // 在 Cloudflare Workers 环境中，我们使用内存存储
+        storage: {
+          async get(key: string) {
+            // 简单的内存实现，实际项目中可以用 KV 存储
+            return null;
+          },
+          async set(key: string, value: any) {
+            // 简单的内存实现
+            return;
+          },
+          async delete(key: string) {
+            return;
+          }
         }
-      }
-    }),
-  });
+      }),
+    });
 
-  const generalCodingAgent = new Agent({
-    name: 'General Coding Assistant',
-    instructions: `
+    const generalCodingAgent = new Agent({
+      name: 'General Coding Assistant',
+      instructions: `
 你是一位全能的编程助手，能够帮助用户解决各种编程问题：
 
 ## 核心功能
@@ -117,18 +114,23 @@ export const createAgents = (apiKey: string) => {
 4. 解释关键部分的实现思路
 5. 提醒注意事项和最佳实践
 `,
-    model: anthropicClient,
-    tools: { 
-      codeExplanationTool 
-    },
-  });
+      model: anthropicClient,
+      tools: { 
+        codeExplanationTool 
+      },
+    });
 
-  console.log('✅ [AGENTS] Successfully created codeReviewAgent and generalCodingAgent');
+    console.log('✅ [AGENTS] Successfully created codeReviewAgent and generalCodingAgent');
 
-  return {
-    codeReviewAgent,
-    generalCodingAgent,
-  };
+    return {
+      codeReviewAgent,
+      generalCodingAgent,
+    };
+    
+  } catch (error) {
+    console.error('❌ [AGENTS] Failed to create Anthropic client:', error);
+    throw error;
+  }
 };
 
 // 为了向后兼容，导出默认的 agents (在没有 API key 时会失败)
