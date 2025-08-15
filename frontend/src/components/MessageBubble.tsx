@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { Message } from '../types/chat';
-import { User, Bot, Copy, Check } from 'lucide-react';
+import { User, Bot, Copy, Check, Settings, Cpu } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
 
 interface MessageBubbleProps {
   message: Message;
+  agentUsed?: string;
+  toolsUsed?: string[];
+  processingMethod?: 'MASTRA' | 'CLAUDE_DIRECT';
 }
 
-const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+const MessageBubble: React.FC<MessageBubbleProps> = ({ 
+  message, 
+  agentUsed, 
+  toolsUsed = [], 
+  processingMethod 
+}) => {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'USER';
 
@@ -28,6 +36,24 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
       minute: '2-digit'
     });
   };
+
+  const getProcessingMethodDisplay = () => {
+    if (!processingMethod) return null;
+    
+    return processingMethod === 'MASTRA' ? {
+      icon: <Settings className="w-3 h-3" />,
+      text: 'Mastra',
+      color: 'text-green-600 bg-green-100',
+      tooltip: `智能Agent: ${agentUsed}${toolsUsed.length > 0 ? ` • 工具: ${toolsUsed.join(', ')}` : ''}`
+    } : {
+      icon: <Cpu className="w-3 h-3" />,
+      text: 'Claude API',
+      color: 'text-blue-600 bg-blue-100',
+      tooltip: '直接调用 Claude API'
+    };
+  };
+
+  const processingInfo = getProcessingMethodDisplay();
 
   return (
     <div className={`flex items-start space-x-3 group ${
@@ -81,12 +107,40 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           </button>
         </div>
         
-        {/* 时间戳 */}
-        <p className={`text-xs text-gray-500 mt-1 px-1 ${
-          isUser ? 'text-right' : 'text-left'
+        {/* 处理方法和时间戳 */}
+        <div className={`flex items-center gap-2 mt-1 px-1 ${
+          isUser ? 'justify-end' : 'justify-start'
         }`}>
-          {formatTime(message.timestamp)}
-        </p>
+          {/* 处理方法指示器 - 只在 AI 回复时显示 */}
+          {!isUser && processingInfo && (
+            <div 
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${processingInfo.color}`}
+              title={processingInfo.tooltip}
+            >
+              {processingInfo.icon}
+              <span>{processingInfo.text}</span>
+            </div>
+          )}
+          
+          {/* 时间戳 */}
+          <p className="text-xs text-gray-500">
+            {formatTime(message.timestamp)}
+          </p>
+        </div>
+        
+        {/* Agent 和工具信息 - 详细信息，只在悬停时显示 */}
+        {!isUser && processingMethod === 'MASTRA' && (agentUsed || toolsUsed.length > 0) && (
+          <div className="mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="text-xs text-gray-400 space-y-0.5">
+              {agentUsed && (
+                <div>🤖 Agent: <span className="font-mono">{agentUsed}</span></div>
+              )}
+              {toolsUsed.length > 0 && (
+                <div>🔧 Tools: <span className="font-mono">{toolsUsed.join(', ')}</span></div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
