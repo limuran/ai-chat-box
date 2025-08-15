@@ -1,4 +1,4 @@
-import { Tool } from '@mastra/core/tool';
+import { Tool } from '@mastra/core';
 import { z } from 'zod';
 
 export const codeReviewTool = new Tool({
