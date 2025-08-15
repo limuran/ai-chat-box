@@ -1,5 +1,4 @@
 import { Mastra } from '@mastra/core';
-import { CloudflareDeployer } from '@mastra/deployer-cloudflare';
 import { codeReviewAgent, generalCodingAgent } from './agents/code-agents';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from './tools/code-tools';
 
@@ -14,12 +13,7 @@ export const mastra = new Mastra({
     codeOptimizationTool,
     codeExplanationTool,
   },
-  // 使用 Cloudflare Workers 专用的部署器
-  deployer: new CloudflareDeployer({
-    // Cloudflare Workers 环境配置
-    environment: 'production',
-    // 这些配置会在部署时自动处理
-  }),
+  // Note: Deployer is not needed in runtime, only during build/deploy process
 });
 
 // 导出 agent 类型
