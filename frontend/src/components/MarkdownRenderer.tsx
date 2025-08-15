@@ -75,10 +75,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
               );
             }
             
-            // 提取语言信息
-            const match = /language-(\w+)/.exec(className || '');
-            const language = match ? match[1] : '';
-            
+            // 对于代码块，直接返回带有className的code元素
             return (
               <code className={className} {...props}>
                 {children}
