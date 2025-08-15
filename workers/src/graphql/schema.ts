@@ -33,12 +33,18 @@ const typeDefs = /* GraphQL */ `
     AUTO_SELECT
   }
 
+  enum ProcessingMethod {
+    MASTRA
+    CLAUDE_DIRECT
+  }
+
   type ChatResponse {
     success: Boolean!
     message: Message
     error: String
     agentUsed: String
     toolsUsed: [String!]
+    processingMethod: ProcessingMethod
   }
 
   type ApiKeyValidation {
@@ -58,6 +64,7 @@ const typeDefs = /* GraphQL */ `
     content: String!
     agentUsed: String!
     error: String
+    processingMethod: ProcessingMethod
   }
 
   # Mastra 健康检查
