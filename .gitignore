@@ -129,6 +129,9 @@ build/
 # Cloudflare
 .wrangler/
 
+# Cloudflare Workers development environment variables
+.dev.vars
+
 # Backup files
 *.bak
 *.backup
