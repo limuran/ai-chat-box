@@ -1,4 +1,4 @@
-import type { Mastra } from '@mastra/core/mastra';
+import type { Mastra } from '@mastra/core';
 
 export interface Message {
   id: string;
@@ -13,6 +13,7 @@ export interface ChatResponse {
   error?: string;
   agentUsed?: string;
   toolsUsed?: string[];
+  processingMethod?: 'MASTRA' | 'CLAUDE_DIRECT'; // 新增：处理方法标识
 }
 
 export interface SendMessageInput {
@@ -32,6 +33,7 @@ export interface CodeReviewResponse {
   content: string;
   agentUsed: string;
   error?: string;
+  processingMethod?: 'MASTRA' | 'CLAUDE_DIRECT'; // 新增：处理方法标识
 }
 
 export interface MastraHealthCheck {
@@ -48,7 +50,8 @@ export interface AgentStatus {
 
 export interface GraphQLContext {
   env: {
-    CLAUDE_API_KEY: string;
+    CLAUDE_API_KEY?: string;
+    ANTHROPIC_API_KEY?: string;
     ENVIRONMENT?: string;
   };
   ctx: ExecutionContext;
