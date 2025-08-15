@@ -4,9 +4,15 @@ import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from './too
 
 // 创建 Mastra 实例的工厂函数
 export const createMastra = (apiKey: string) => {
+  console.log('🏗️ [MASTRA] Creating Mastra instance with API key:', apiKey ? 'Present' : 'Missing');
+  
+  if (!apiKey) {
+    throw new Error('API key is required to create Mastra instance');
+  }
+
   const { codeReviewAgent, generalCodingAgent } = createAgents(apiKey);
   
-  return new Mastra({
+  const mastraInstance = new Mastra({
     agents: { 
       codeReviewAgent, 
       generalCodingAgent 
@@ -17,6 +23,10 @@ export const createMastra = (apiKey: string) => {
       codeExplanationTool,
     },
   });
+
+  console.log('✅ [MASTRA] Mastra instance created successfully');
+  
+  return mastraInstance;
 };
 
 // 导出 agent 类型
@@ -45,10 +55,12 @@ export function selectAppropriateAgent(message: string): AgentType {
 
   // 如果有代码审查关键词或者包含代码块，使用代码审查 agent
   if (hasCodeReviewKeywords || hasCodeBlock) {
+    console.log('🎯 [AGENT-SELECT] Selected codeReviewAgent for code-related query');
     return 'codeReviewAgent';
   }
 
   // 默认使用通用编程助手
+  console.log('🎯 [AGENT-SELECT] Selected generalCodingAgent for general query');
   return 'generalCodingAgent';
 }
 
@@ -60,12 +72,17 @@ export async function handleMastraRequest(
   conversationHistory: any[] = []
 ) {
   try {
+    console.log(`🚀 [MASTRA-REQUEST] Processing with agent: ${agentName}`);
+    console.log(`📝 [MASTRA-REQUEST] Message: "${message.slice(0, 100)}..."`);
+
     // 获取指定的 agent
     const agent = mastra.getAgent(agentName);
     
     if (!agent) {
       throw new Error(`Agent ${agentName} not found`);
     }
+
+    console.log(`✅ [MASTRA-REQUEST] Agent ${agentName} found`);
 
     // 构建对话上下文
     const messages = [
@@ -79,8 +96,12 @@ export async function handleMastraRequest(
       }
     ];
 
+    console.log(`💬 [MASTRA-REQUEST] Sending ${messages.length} messages to agent`);
+
     // 使用 agent 生成响应
     const result = await agent.generate(messages);
+
+    console.log(`🎉 [MASTRA-REQUEST] Successfully generated response`);
 
     return {
       success: true,
@@ -90,7 +111,7 @@ export async function handleMastraRequest(
     };
 
   } catch (error) {
-    console.error('Mastra request error:', error);
+    console.error('❌ [MASTRA-REQUEST] Error:', error);
     throw error;
   }
 }
@@ -103,6 +124,8 @@ export async function handleCodeReview(
   context?: string
 ) {
   try {
+    console.log('🔍 [CODE-REVIEW] Starting code review process');
+    
     const agent = mastra.getAgent('codeReviewAgent');
     
     if (!agent) {
@@ -128,12 +151,16 @@ export async function handleCodeReview(
     prompt += `4. 性能优化建议\n`;
     prompt += `5. 最佳实践建议`;
 
+    console.log('📋 [CODE-REVIEW] Generated review prompt');
+
     const result = await agent.generate([
       {
         role: 'user',
         content: prompt,
       }
     ]);
+
+    console.log('✅ [CODE-REVIEW] Review completed successfully');
 
     return {
       success: true,
@@ -143,7 +170,7 @@ export async function handleCodeReview(
     };
 
   } catch (error) {
-    console.error('Code review error:', error);
+    console.error('❌ [CODE-REVIEW] Error:', error);
     throw error;
   }
 }
@@ -151,13 +178,18 @@ export async function handleCodeReview(
 // 健康检查函数
 export async function checkMastraHealth(mastra: Mastra) {
   try {
+    console.log('🏥 [HEALTH-CHECK] Running Mastra health check');
+    
     const agents = ['codeReviewAgent', 'generalCodingAgent'] as AgentType[];
     const agentStatus: Record<string, boolean> = {};
     
     for (const agentType of agents) {
       const agent = mastra.getAgent(agentType);
       agentStatus[agentType] = !!agent;
+      console.log(`🔍 [HEALTH-CHECK] ${agentType}: ${agent ? 'Available' : 'Not found'}`);
     }
+
+    console.log('✅ [HEALTH-CHECK] Health check completed');
 
     return {
       status: 'healthy',
@@ -165,6 +197,7 @@ export async function checkMastraHealth(mastra: Mastra) {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
+    console.error('❌ [HEALTH-CHECK] Error:', error);
     return {
       status: 'error',
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -174,4 +207,4 @@ export async function checkMastraHealth(mastra: Mastra) {
 }
 
 // 为了向后兼容，导出一个默认实例（但没有 API key 会失败）
-export const mastra = createMastra('');
+// export const mastra = createMastra('');
