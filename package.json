@@ -1,0 +1,40 @@
+{
+  "name": "ai-chat-box",
+  "version": "1.0.0",
+  "description": "AI Chat Box with React frontend and Cloudflare Workers backend",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "workers"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:workers\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:workers": "cd workers && npm run dev",
+    "build": "npm run build:frontend && npm run build:workers",
+    "build:frontend": "cd frontend && npm run build",
+    "build:workers": "cd workers && npm run build",
+    "install:all": "npm install && cd frontend && npm install && cd ../workers && npm install",
+    "clean": "cd frontend && npm run clean && cd ../workers && rm -rf node_modules package-lock.json",
+    "fresh-install": "npm run clean && npm run install:all"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/limuran/ai-chat-box.git"
+  },
+  "keywords": [
+    "ai",
+    "chat",
+    "react",
+    "cloudflare-workers",
+    "typescript"
+  ],
+  "author": "limuran",
+  "license": "MIT"
+}
