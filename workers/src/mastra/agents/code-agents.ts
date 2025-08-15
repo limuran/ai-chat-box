@@ -3,6 +3,15 @@ import { Agent } from '@mastra/core';
 import { Memory } from '@mastra/memory';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from '../tools/code-tools';
 
+// 创建 Anthropic 客户端，API 密钥从环境变量获取
+const createAnthropicClient = () => {
+  // 在 Cloudflare Workers 中，环境变量通过 env 对象传递
+  // 这里我们使用一个工厂函数，在运行时获取 API 密钥
+  return anthropic('claude-3-5-sonnet-20241022', {
+    apiKey: globalThis.ANTHROPIC_API_KEY || globalThis.CLAUDE_API_KEY,
+  });
+};
+
 export const codeReviewAgent = new Agent({
   name: 'Code Review Agent',
   instructions: `
@@ -36,7 +45,7 @@ export const codeReviewAgent = new Agent({
 
 保持专业、友善的语调，提供建设性的反馈。
 `,
-  model: anthropic('claude-3-5-sonnet-20241022'),
+  model: createAnthropicClient(),
   tools: { 
     codeReviewTool, 
     codeOptimizationTool, 
@@ -86,7 +95,7 @@ export const generalCodingAgent = new Agent({
 4. 解释关键部分的实现思路
 5. 提醒注意事项和最佳实践
 `,
-  model: anthropic('claude-3-5-sonnet-20241022'),
+  model: createAnthropicClient(),
   tools: { 
     codeExplanationTool 
   },
