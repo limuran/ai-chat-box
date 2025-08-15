@@ -5,12 +5,32 @@ import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from '../to
 
 // 创建一个工厂函数来根据环境变量创建 agents
 export const createAgents = (apiKey: string) => {
-  // 确保 API 密钥被正确传递给 Anthropic 客户端
+  console.log('🤖 [AGENTS] Creating agents with API key length:', apiKey?.length || 0);
+
+  if (!apiKey || apiKey.length < 10) {
+    throw new Error('Invalid API key provided to createAgents');
+  }
+
+  // 使用不同的方式初始化 Anthropic 客户端
+  // 方法1: 直接传递 apiKey
   const anthropicClient = anthropic('claude-3-5-sonnet-20241022', {
-    apiKey: apiKey, // 显式传递 API 密钥
+    apiKey: apiKey,
   });
 
-  console.log('🤖 [AGENTS] Creating agents with API key:', apiKey ? 'Set' : 'Missing');
+  // 方法2: 设置环境变量（作为备选）
+  // 注意：在 Cloudflare Workers 中，这可能不会工作，但我们尝试一下
+  if (typeof process !== 'undefined' && process.env) {
+    process.env.ANTHROPIC_API_KEY = apiKey;
+    console.log('🔑 [AGENTS] Set ANTHROPIC_API_KEY in process.env');
+  }
+
+  // 方法3: 设置 globalThis（Cloudflare Workers 环境）
+  if (typeof globalThis !== 'undefined') {
+    (globalThis as any).ANTHROPIC_API_KEY = apiKey;
+    console.log('🌍 [AGENTS] Set ANTHROPIC_API_KEY in globalThis');
+  }
+
+  console.log('🔧 [AGENTS] Anthropic client created with model: claude-3-5-sonnet-20241022');
 
   const codeReviewAgent = new Agent({
     name: 'Code Review Agent',
