@@ -1,10 +1,11 @@
 import { ClaudeService } from '../services/claude';
-import { GraphQLContext, SendMessageInput, Message } from './types';
+import { MastraService } from '../services/mastra';
+import { GraphQLContext, SendMessageInput, Message, CodeReviewInput } from './types';
 
 export const resolvers = {
   Query: {
     health: () => {
-      return 'AI Chat Workers is running!';
+      return 'AI Chat Workers with Mastra integration is running!';
     },
     
     availableModels: () => {
@@ -12,6 +13,14 @@ export const resolvers = {
         'claude-3-5-sonnet-20241022', // 最新的 Claude 3.5 Sonnet
         'claude-3-5-haiku-20241022',  // Claude 3.5 Haiku
         'claude-3-opus-20240229'      // Claude 3 Opus (如果仍然可用)
+      ];
+    },
+
+    availableAgents: () => {
+      return [
+        'CODE_REVIEW_AGENT',
+        'GENERAL_CODING_AGENT',
+        'AUTO_SELECT'
       ];
     },
 
@@ -44,6 +53,50 @@ export const resolvers = {
         };
       }
     },
+
+    // Mastra 健康检查
+    mastraHealth: async (
+      _: any,
+      __: any,
+      context: GraphQLContext
+    ) => {
+      try {
+        if (!context.env.CLAUDE_API_KEY) {
+          return {
+            status: 'error',
+            agents: [],
+            timestamp: new Date().toISOString(),
+            error: 'Claude API Key 未配置'
+          };
+        }
+
+        const mastraService = new MastraService({
+          claudeApiKey: context.env.CLAUDE_API_KEY
+        });
+
+        const healthStatus = await mastraService.healthCheck();
+        
+        const agents = Object.entries(healthStatus.agents || {}).map(([name, available]) => ({
+          name,
+          available: Boolean(available)
+        }));
+
+        return {
+          status: healthStatus.status,
+          agents,
+          timestamp: healthStatus.timestamp,
+          error: healthStatus.error || null
+        };
+      } catch (error) {
+        console.error('Mastra health check error:', error);
+        return {
+          status: 'error',
+          agents: [],
+          timestamp: new Date().toISOString(),
+          error: error instanceof Error ? error.message : '健康检查失败'
+        };
+      }
+    },
   },
 
   Mutation: {
@@ -53,7 +106,7 @@ export const resolvers = {
       context: GraphQLContext
     ) => {
       try {
-        const { content, conversationHistory = [] } = input;
+        const { content, conversationHistory = [], agentType } = input;
         
         if (!content.trim()) {
           return {
@@ -69,25 +122,39 @@ export const resolvers = {
           };
         }
 
-        console.log('Creating Claude service with API key length:', context.env.CLAUDE_API_KEY.length);
-        const claudeService = new ClaudeService(context.env.CLAUDE_API_KEY);
+        console.log('Processing message with Mastra integration');
         
-        // 准备对话历史 - 修复role类型问题
-        const messages = [...conversationHistory, {
-          id: Date.now().toString(),
+        // 创建 Mastra 服务实例
+        const mastraService = new MastraService({
+          claudeApiKey: context.env.CLAUDE_API_KEY
+        });
+
+        // 映射 GraphQL agentType 到 Mastra agentType
+        let mastraAgentType = undefined;
+        if (agentType === 'CODE_REVIEW_AGENT') {
+          mastraAgentType = 'codeReviewAgent';
+        } else if (agentType === 'GENERAL_CODING_AGENT') {
+          mastraAgentType = 'generalCodingAgent';
+        }
+        // AUTO_SELECT 或未指定时，让 Mastra 自动选择
+
+        // 使用 Mastra 处理消息
+        const result = await mastraService.processWithMastra(
           content,
-          role: 'USER' as const,
-          timestamp: new Date().toISOString(),
-        }];
+          conversationHistory,
+          mastraAgentType
+        );
 
-        console.log('Sending message to Claude, total messages:', messages.length);
+        if (!result.success) {
+          return {
+            success: false,
+            error: '处理消息时发生错误',
+          };
+        }
 
-        // 调用 Claude API
-        const response = await claudeService.sendMessage(messages);
-        
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: response,
+          content: result.content,
           role: 'ASSISTANT',
           timestamp: new Date().toISOString(),
         };
@@ -95,12 +162,66 @@ export const resolvers = {
         return {
           success: true,
           message: assistantMessage,
+          agentUsed: result.agentUsed,
+          toolsUsed: result.toolsUsed || [],
         };
       } catch (error) {
         console.error('SendMessage error:', error);
         return {
           success: false,
           error: error instanceof Error ? error.message : '未知错误',
+        };
+      }
+    },
+
+    // 专门的代码审查功能
+    reviewCode: async (
+      _: any,
+      { input }: { input: CodeReviewInput },
+      context: GraphQLContext
+    ) => {
+      try {
+        const { code, language, context: codeContext } = input;
+        
+        if (!code.trim()) {
+          return {
+            success: false,
+            content: '',
+            agentUsed: '',
+            error: '代码内容不能为空',
+          };
+        }
+
+        if (!context.env.CLAUDE_API_KEY) {
+          return {
+            success: false,
+            content: '',
+            agentUsed: '',
+            error: 'Claude API Key 未配置',
+          };
+        }
+
+        console.log('Starting code review with Mastra');
+        
+        const mastraService = new MastraService({
+          claudeApiKey: context.env.CLAUDE_API_KEY
+        });
+
+        const result = await mastraService.reviewCode(code, language, codeContext);
+
+        return {
+          success: result.success,
+          content: result.content,
+          agentUsed: result.agentUsed,
+          error: result.success ? null : '代码审查失败',
+        };
+      } catch (error) {
+        console.error('Code review error:', error);
+        return {
+          success: false,
+          content: '',
+          agentUsed: '',
+          error: error instanceof Error ? error.message : '代码审查失败',
         };
       }
     },
