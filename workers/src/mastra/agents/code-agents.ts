@@ -3,18 +3,15 @@ import { Agent } from '@mastra/core';
 import { Memory } from '@mastra/memory';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from '../tools/code-tools';
 
-// 创建 Anthropic 客户端，API 密钥从环境变量获取
-const createAnthropicClient = () => {
-  // 在 Cloudflare Workers 中，环境变量通过 env 对象传递
-  // 这里我们使用一个工厂函数，在运行时获取 API 密钥
-  return anthropic('claude-3-5-sonnet-20241022', {
-    apiKey: globalThis.ANTHROPIC_API_KEY || globalThis.CLAUDE_API_KEY,
+// 创建一个工厂函数来根据环境变量创建 agents
+export const createAgents = (apiKey: string) => {
+  const anthropicClient = anthropic('claude-3-5-sonnet-20241022', {
+    apiKey,
   });
-};
 
-export const codeReviewAgent = new Agent({
-  name: 'Code Review Agent',
-  instructions: `
+  const codeReviewAgent = new Agent({
+    name: 'Code Review Agent',
+    instructions: `
 你是一位资深的代码审查专家，擅长多种编程语言的代码分析和优化。你的主要职责包括：
 
 ## 核心能力
@@ -45,33 +42,33 @@ export const codeReviewAgent = new Agent({
 
 保持专业、友善的语调，提供建设性的反馈。
 `,
-  model: createAnthropicClient(),
-  tools: { 
-    codeReviewTool, 
-    codeOptimizationTool, 
-    codeExplanationTool 
-  },
-  memory: new Memory({
-    // 在 Cloudflare Workers 环境中，我们使用内存存储
-    storage: {
-      async get(key: string) {
-        // 简单的内存实现，实际项目中可以用 KV 存储
-        return null;
-      },
-      async set(key: string, value: any) {
-        // 简单的内存实现
-        return;
-      },
-      async delete(key: string) {
-        return;
+    model: anthropicClient,
+    tools: { 
+      codeReviewTool, 
+      codeOptimizationTool, 
+      codeExplanationTool 
+    },
+    memory: new Memory({
+      // 在 Cloudflare Workers 环境中，我们使用内存存储
+      storage: {
+        async get(key: string) {
+          // 简单的内存实现，实际项目中可以用 KV 存储
+          return null;
+        },
+        async set(key: string, value: any) {
+          // 简单的内存实现
+          return;
+        },
+        async delete(key: string) {
+          return;
+        }
       }
-    }
-  }),
-});
+    }),
+  });
 
-export const generalCodingAgent = new Agent({
-  name: 'General Coding Assistant',
-  instructions: `
+  const generalCodingAgent = new Agent({
+    name: 'General Coding Assistant',
+    instructions: `
 你是一位全能的编程助手，能够帮助用户解决各种编程问题：
 
 ## 核心功能
@@ -95,8 +92,17 @@ export const generalCodingAgent = new Agent({
 4. 解释关键部分的实现思路
 5. 提醒注意事项和最佳实践
 `,
-  model: createAnthropicClient(),
-  tools: { 
-    codeExplanationTool 
-  },
-});
+    model: anthropicClient,
+    tools: { 
+      codeExplanationTool 
+    },
+  });
+
+  return {
+    codeReviewAgent,
+    generalCodingAgent,
+  };
+};
+
+// 为了向后兼容，导出默认的 agents (在没有 API key 时会失败)
+export const { codeReviewAgent, generalCodingAgent } = createAgents('');
