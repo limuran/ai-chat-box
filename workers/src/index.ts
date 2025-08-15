@@ -3,6 +3,9 @@ import { schema } from './graphql/schema';
 import { handleCors } from './utils/cors';
 import { createMastra } from './mastra';
 
+// 禁用 Mastra 遥测警告（在 Cloudflare Workers 环境中不需要）
+globalThis.___MASTRA_TELEMETRY___ = true;
+
 export interface Env {
   CLAUDE_API_KEY?: string;
   ANTHROPIC_API_KEY?: string;
