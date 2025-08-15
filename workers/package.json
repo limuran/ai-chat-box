@@ -25,7 +25,7 @@
     "@types/node": "^24.2.1",
     "mastra": "^0.10.20",
     "typescript": "^5.0.2",
-    "wrangler": "^3.0.0"
+    "wrangler": "^4.30.0"
   },
   "type": "module"
 }
