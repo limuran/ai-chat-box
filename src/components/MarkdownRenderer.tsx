@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeRaw from 'rehype-raw';
+import CodeBlock from './CodeBlock';
 
 interface MarkdownRendererProps {
   content: string;
@@ -72,23 +73,19 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
               );
             }
             
-            // 提取语言信息
+            // 提取语言信息和代码内容
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
+            const codeString = String(children).replace(/\n$/, '');
             
             return (
-              <div className="relative">
-                {language && (
-                  <div className="absolute top-2 right-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    {language}
-                  </div>
-                )}
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-3">
+              <CodeBlock code={codeString} language={language}>
+                <pre className="bg-gray-900 text-gray-100 p-4 overflow-x-auto m-0 rounded-b-lg">
                   <code className={className}>
                     {children}
                   </code>
                 </pre>
-              </div>
+              </CodeBlock>
             );
           },
           table: ({ children }) => (
@@ -141,7 +138,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
           hr: () => (
             <hr className="my-6 border-gray-300" />
           ),
-          // 自定义评分显示
+          // 自定义评分和标签显示
           img: ({ src, alt }) => {
             // 如果是评分相关的图标或徽章
             if (alt?.includes('评分') || alt?.includes('score')) {
@@ -158,6 +155,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
                 className="max-w-full h-auto rounded-lg my-2"
               />
             );
+          },
+          // 自定义代码审查专用的组件
+          div: ({ className, children }) => {
+            // 检查是否是代码审查相关的 div
+            if (className?.includes('code-review')) {
+              return (
+                <div className={`p-4 my-4 rounded-lg border-l-4 ${className}`}>
+                  {children}
+                </div>
+              );
+            }
+            return <div className={className}>{children}</div>;
           },
         }}
       >
