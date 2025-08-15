@@ -1,20 +1,23 @@
 import { Mastra } from '@mastra/core';
-import { codeReviewAgent, generalCodingAgent } from './agents/code-agents';
+import { createAgents } from './agents/code-agents';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from './tools/code-tools';
 
-// 创建 Mastra 实例，专门为 Cloudflare Workers 优化
-export const mastra = new Mastra({
-  agents: { 
-    codeReviewAgent, 
-    generalCodingAgent 
-  },
-  tools: {
-    codeReviewTool,
-    codeOptimizationTool,
-    codeExplanationTool,
-  },
-  // Note: Deployer is not needed in runtime, only during build/deploy process
-});
+// 创建 Mastra 实例的工厂函数
+export const createMastra = (apiKey: string) => {
+  const { codeReviewAgent, generalCodingAgent } = createAgents(apiKey);
+  
+  return new Mastra({
+    agents: { 
+      codeReviewAgent, 
+      generalCodingAgent 
+    },
+    tools: {
+      codeReviewTool,
+      codeOptimizationTool,
+      codeExplanationTool,
+    },
+  });
+};
 
 // 导出 agent 类型
 export type AgentType = 'codeReviewAgent' | 'generalCodingAgent';
@@ -51,6 +54,7 @@ export function selectAppropriateAgent(message: string): AgentType {
 
 // Cloudflare Workers 特定的 Mastra 处理函数
 export async function handleMastraRequest(
+  mastra: Mastra,
   agentName: AgentType,
   message: string,
   conversationHistory: any[] = []
@@ -93,6 +97,7 @@ export async function handleMastraRequest(
 
 // 专门用于代码审查的处理函数
 export async function handleCodeReview(
+  mastra: Mastra,
   code: string, 
   language?: string, 
   context?: string
@@ -144,7 +149,7 @@ export async function handleCodeReview(
 }
 
 // 健康检查函数
-export async function checkMastraHealth() {
+export async function checkMastraHealth(mastra: Mastra) {
   try {
     const agents = ['codeReviewAgent', 'generalCodingAgent'] as AgentType[];
     const agentStatus: Record<string, boolean> = {};
@@ -167,3 +172,6 @@ export async function checkMastraHealth() {
     };
   }
 }
+
+// 为了向后兼容，导出一个默认实例（但没有 API key 会失败）
+export const mastra = createMastra('');
