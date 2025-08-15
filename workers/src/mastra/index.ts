@@ -1,4 +1,4 @@
-import { Mastra } from '@mastra/core/mastra';
+import { Mastra } from '@mastra/core';
 import { CloudflareDeployer } from '@mastra/deployer-cloudflare';
 import { codeReviewAgent, generalCodingAgent } from './agents/code-agents';
 import { codeReviewTool, codeOptimizationTool, codeExplanationTool } from './tools/code-tools';
